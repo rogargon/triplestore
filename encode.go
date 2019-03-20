@@ -193,14 +193,22 @@ func (enc *ntriplesEncoder) Encode(tris ...Triple) error {
 func encodeNTriple(t Triple, ctx *Context, buff *bytes.Buffer) {
 	var sub string
 	if tt := t.(*triple); tt.isSubBnode {
-		sub = "_:" + buildIRI(ctx, t.Subject())
+		if strings.HasPrefix(t.Subject(), "_:") {
+			sub = buildIRI(ctx, t.Subject())
+		} else {
+			sub = "_:" + buildIRI(ctx, t.Subject())
+		}
 	} else {
 		sub = "<" + buildIRI(ctx, t.Subject()) + ">"
 	}
 	buff.WriteString(sub + " <" + buildIRI(ctx, t.Predicate()) + "> ")
 
 	if bnode, isBnode := t.Object().Bnode(); isBnode {
-		buff.WriteString("_:" + bnode)
+		if strings.HasPrefix(t.Subject(), "_:") {
+			buff.WriteString(bnode)
+		} else {
+			buff.WriteString("_:" + bnode)
+		}
 	} else {
 		if rid, ok := t.Object().Resource(); ok {
 			buff.WriteString("<" + buildIRI(ctx, rid) + ">")
